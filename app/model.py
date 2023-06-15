@@ -20,7 +20,8 @@ class Model:
     def prepare_dataset(self):
         """
 
-
+        Creating train, validate and test data for dataset
+        For storing information used json file which contains files and their labels
 
         """
 
@@ -127,6 +128,13 @@ class Model:
         self.model_structure.save('../models/my_model.h5')
 
     def __preprocess_dataset(self, files):
+        """
+
+        Dataset preprocessing
+        :param files: dataset files
+
+        """
+
         files_ds = tf.data.Dataset.from_tensor_slices(files)
         output_ds = files_ds.map(
             map_func=self.__get_waveform_and_label,
@@ -137,12 +145,26 @@ class Model:
         return output_ds
 
     def __get_waveform_and_label(self, file_path):
+        """
+
+        Getting waveform and file label
+        :param file_path: path to file
+
+        """
+
         label = self.__get_label(file_path)
         audio_binary = tf.io.read_file(file_path)
         waveform = self.__decode_audio(audio_binary)
         return waveform, label
 
     def __get_spectrogram(self, waveform):
+        """
+
+        Creating spectrogram from waveform data
+        :param waveform: waveform data
+
+        """
+
         input_len = 16000
         waveform = waveform[:input_len]
         zero_padding = tf.zeros(

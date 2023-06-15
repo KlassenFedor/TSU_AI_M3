@@ -12,6 +12,7 @@ class StreamAnalyzer:
     def __init__(self):
         self.attempts_number = 10
         self.waiting_time = 5
+
         self.samplerate = 16000
         self.window = 4000
         self.model = Model()
@@ -68,7 +69,6 @@ class StreamAnalyzer:
                         else:
                             current_position += self.window
 
-            break
 
         while current_position + 16000 < len(blocks):
             j += 1
