@@ -33,6 +33,15 @@ Prepare dataset:
 >python dataset_preparation.py prepare_dataset
 ```
 
+### Model data:
+| Param | Val |
+| -----|------|
+| Optimizer | Adam |
+| Epochs | 1-2 (for different models) |
+| Loss function | SparseCategoricalCrossEntropy |
+| Learning rate | 0.0001 |
+
+
 ### Sources
 https://www.tensorflow.org/tutorials/audio/simple_audio?hl=en
 
