@@ -2,8 +2,10 @@ import requests
 import time
 from pydub import AudioSegment
 from array import array
-from app.model import Model
 import fire
+from model import Model
+import logging
+logging.basicConfig(level=logging.DEBUG, filename='../data/log_file.log', filemode='a')
 
 
 class StreamAnalyzer:
@@ -15,6 +17,12 @@ class StreamAnalyzer:
         self.model = Model()
 
     def analyze_stream(self, url):
+        """
+        Processes the audio stream and saves the found keywords
+        :param url: audio stream address
+
+        """
+
         flag = False
         word_num = 0
         blocks = []
@@ -26,24 +34,26 @@ class StreamAnalyzer:
             flag = True
             try:
                 r = requests.get(url, stream=True)
-                print(r.status_code)
+                logging.info('Code - 200. Can operate with data.')
             except:
                 flag = False
+                logging.info('Failed to get the stream, will be attempted later')
                 time.sleep(self.waiting_time)
 
             if flag:
 
                 for block in r.iter_content(16384, decode_unicode=True):
                     j += 1
-                    with open('D:/TSU/HITS/TSU_AI_M3/notebooks/test/myfile_3_.mp3', 'wb') as f:
+                    with open('../notebooks/test/myfile_3_.mp3', 'wb') as f:
                         f.write(block)
-                    sound = AudioSegment.from_mp3('D:/TSU/HITS/TSU_AI_M3/notebooks/test/myfile_3_.mp3')
+                    sound = AudioSegment.from_mp3('../notebooks/test/myfile_3_.mp3')
                     sound = sound.set_frame_rate(self.samplerate)
                     data = sound.get_array_of_samples()
                     blocks.extend(data)
                     if len(blocks) >= 40000:
                         current_clip = blocks[current_position:current_position + self.samplerate]
                         if self.model.predict_from_data(current_clip):
+                            logging.info('Hot word detected, keyword wil be written')
                             print('word detected', j)
                             print(current_position, current_position + self.samplerate)
                             word_num += 1
@@ -52,16 +62,19 @@ class StreamAnalyzer:
                             secret_clip = blocks[secret_start:secret_end]
                             AudioSegment(array('h', secret_clip), frame_rate=self.samplerate,
                                          sample_width=sound.sample_width, channels=1) \
-                                .export('D:/TSU/HITS/TSU_AI_M3/notebooks/test/secret' + str(word_num) + '_5_.wav',
+                                .export('../notebooks/test/secret' + str(word_num) + '_5_.wav',
                                         format='wav')
                             current_position += self.samplerate * 2 + 3200
                         else:
                             current_position += self.window
 
+            break
+
         while current_position + 16000 < len(blocks):
             j += 1
             current_clip = blocks[current_position:current_position + self.samplerate]
             if self.model.predict_from_data(current_clip):
+                logging.info('Hot word detected, keyword wil be written')
                 print('word detected', j)
                 print(current_position, current_position + self.samplerate)
                 word_num += 1
@@ -70,10 +83,12 @@ class StreamAnalyzer:
                 secret_clip = blocks[secret_start:secret_end]
                 AudioSegment(array('h', secret_clip), frame_rate=self.samplerate, sample_width=sound.sample_width,
                              channels=1) \
-                    .export('D:/TSU/HITS/TSU_AI_M3/notebooks/test/secret' + str(word_num) + '_5_.wav', format='wav')
+                    .export('../notebooks/test/secret' + str(word_num) + '_5_.wav', format='wav')
                 current_position += self.samplerate * 2 + 3200
             else:
                 current_position += self.window
+
+        logging.info('Processing of the stream has been completed successfully')
 
 
 if __name__ == '__main__':

@@ -1,14 +1,29 @@
+import fire
 from pydub import AudioSegment
 import numpy as np
 import json
+import logging
+logging.basicConfig(level=logging.DEBUG, filename='../data/log_file.log', filemode='a')
 
 
 class DatasetCreator:
     def prepare_dataset(self):
+        """
+
+        Preparation of one-second wav files
+
+        """
+
         self.__prepare_background_clips()
         self.__prepare_and_augment_clips()
 
     def __prepare_background_clips(self):
+        """
+
+        Preparation of one-second wav files from background sound
+
+        """
+
         start_time = 0
         wav_file = AudioSegment.from_wav('../dataset/stream_test.wav')
         t1 = start_time
@@ -17,12 +32,20 @@ class DatasetCreator:
             newAudio = wav_file[t1:t2]
             t1 = t2
             t2 += 1000
-            newAudio.export('../dataset/back_clips/clip' + str(i) + '.wav', format="wav")
+            newAudio.export('../dataset/back_clips/clip' + str(i) + '.wav', format='wav')
 
     def __prepare_and_augment_clips(self):
+        """
+
+        Gluing background files and keyword files.
+        Changes are applied to both types of files - acceleration, clipping, amplitude change.
+        After that, the files are saved with labels 1 or 0.
+
+        """
+
         insert_change_rate = 0.2
         stones_number = 16
-        dataset_size = 20011
+        dataset_size = 20000
         dataset_dict = {}
 
         for i in range(dataset_size):
@@ -45,7 +68,7 @@ class DatasetCreator:
                 dataset_dict['../dataset/dataset_join/clip' + str(i) + '_1_.wav'] = 1
             else:
                 background_clip = self.__match_target_amplitude(
-                    '../dataset/clip' + str(i) + '.wav', np.random.uniform(-5, 10))
+                    '../dataset/back_clips/clip' + str(i) + '.wav', np.random.uniform(-5, 10))
                 background_clip.export('../dataset/dataset_join/clip' + str(i) + '_0_.wav',
                                        format="wav")
                 dataset_dict['../dataset/dataset_join/clip' + str(i) + '_0_.wav'] = 0
@@ -54,6 +77,19 @@ class DatasetCreator:
             json.dump(dataset_dict, file, ensure_ascii=False)
 
     def __match_target_amplitude(self, sound, target_dBFS):
+        """
+
+        Changes the amplitude of the wav file
+        :param sound: file_path
+        :param target_dBFS: int or float value
+        :return: AudioSegment
+
+        """
+
         clip = AudioSegment.from_wav(sound)
         clip += target_dBFS
         return clip
+
+
+if __name__ == '__main__':
+    fire.Fire(DatasetCreator)
