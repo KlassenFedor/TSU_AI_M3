@@ -7,7 +7,7 @@ from keras import layers, models
 
 class Model:
     def __init__(self):
-        self.model = tf.keras.saving.load_model('../models/my_model_v4.h5')
+        self.model = tf.keras.saving.load_model('../models/my_model_v3.h5')
         self.autotune = tf.data.AUTOTUNE
         self.commands = [1, 0]
         self.spectrogram_ds = None
